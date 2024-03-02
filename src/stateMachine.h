@@ -1,16 +1,16 @@
-/* 
+/*
  * Copyright (c) 2013 Andreas Misje
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
  * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -84,7 +84,7 @@ struct event
 {
    /** \brief Type of event. Defined by user. */
    int type;
-   /** 
+   /**
     * \brief Event payload.
     *
     * How this is used is entirely up to the user. This data
@@ -178,8 +178,8 @@ struct transition
     *
     * \returns true if the event's data fulfils the condition, otherwise false.
     */
-   bool ( *guard )( void *condition, struct event *event );
-   /** 
+   bool (*guard)(void *condition, struct event *event);
+   /**
     * \brief Function containing tasks to be performed during the transition
     *
     * The transition may optionally do some work in this function before
@@ -191,8 +191,8 @@ struct transition
     * "entryState" of any (chain of) parent states, not the parent state
     * itself) \ref state::data "data"
     */
-   void ( *action )( void *currentStateData, struct event *event,
-         void *newStateData );
+   bool (*action)(void *currentStateData, struct event *event,
+                  void *newStateData);
    /**
     * \brief The next state
     *
@@ -221,7 +221,7 @@ struct transition
  * state has a parent state, the event will be passed to the parent state.
  * This behaviour is repeated for all parents. Thus all children of a state
  * have a set of common #transitions. A parent state's #entryAction will not
- * be called if an event is passed on to a child state. 
+ * be called if an event is passed on to a child state.
  *
  * The following lists the different types of states that may be created, and
  * how to create them:
@@ -295,11 +295,11 @@ struct state
     * child state that serves as an entry point.
     */
    struct state *entryState;
-   /** 
+   /**
     * \brief An array of transitions for the state.
     */
    struct transition *transitions;
-   /** 
+   /**
     * \brief Number of transitions in the #transitions array.
     */
    size_t numTransitions;
@@ -308,7 +308,7 @@ struct state
     * #exitAction, and in any \ref transition::action "transition action"
     */
    void *data;
-   /** 
+   /**
     * \brief This function is called whenever the state is being entered. May
     * be NULL.
     *
@@ -321,7 +321,7 @@ struct state
     * \param stateData the state's #data will be passed.
     * \param event the event that triggered the transition will be passed.
     */
-   void ( *entryAction )( void *stateData, struct event *event );
+   void (*entryAction)(void *stateData, struct event *event);
    /**
     * \brief This function is called whenever the state is being left. May be
     * NULL.
@@ -332,7 +332,7 @@ struct state
     * \param stateData the state's #data will be passed.
     * \param event the event that triggered a transition will be passed.
     */
-   void ( *exitAction )( void *stateData, struct event *event );
+   void (*exitAction)(void *stateData, struct event *event);
 };
 
 /**
@@ -344,14 +344,14 @@ struct stateMachine
 {
    /** \brief Pointer to the current state */
    struct state *currentState;
-   /** 
+   /**
     * \brief Pointer to previous state
     *
     * The previous state is stored for convenience in case the user needs to
     * keep track of previous states.
     */
    struct state *previousState;
-   /** 
+   /**
     * \brief Pointer to a state that will be entered whenever an error occurs
     * in the state machine.
     *
@@ -372,7 +372,7 @@ struct stateMachine
  *
  * \note The \ref #state::entryAction "entry action" for \pn{initialState}
  * will not be called.
- * 
+ *
  * \note If \pn{initialState} is a parent state with its \ref
  * state::entryState "entryState" defined, it will not be entered. The user
  * must explicitly set the initial state.
@@ -382,8 +382,8 @@ struct stateMachine
  * \param errorState pointer to a state that acts a final state and notifies
  * the system/user that an error has occurred.
  */
-void stateM_init( struct stateMachine *stateMachine,
-      struct state *initialState, struct state *errorState );
+void stateM_init(struct stateMachine *stateMachine,
+                 struct state *initialState, struct state *errorState);
 
 /**
  * \brief stateM_handleEvent() return values
@@ -445,8 +445,8 @@ enum stateM_handleEventRetVals
  *
  * \return #stateM_handleEventRetVals
  */
-int stateM_handleEvent( struct stateMachine *stateMachine,
-      struct event *event );
+int stateM_handleEvent(struct stateMachine *stateMachine,
+                       struct event *event);
 
 /**
  * \brief Get the current state
@@ -456,7 +456,7 @@ int stateM_handleEvent( struct stateMachine *stateMachine,
  * \retval a pointer to the current state.
  * \retval NULL if \pn{stateMachine} is NULL.
  */
-struct state *stateM_currentState( struct stateMachine *stateMachine );
+struct state *stateM_currentState(struct stateMachine *stateMachine);
 
 /**
  * \brief Get the previous state
@@ -467,7 +467,7 @@ struct state *stateM_currentState( struct stateMachine *stateMachine );
  * \retval NULL if \pn{stateMachine} is NULL.
  * \retval NULL if there has not yet been any transitions.
  */
-struct state *stateM_previousState( struct stateMachine *stateMachine );
+struct state *stateM_previousState(struct stateMachine *stateMachine);
 
 /**
  * \brief Check if the state machine has stopped
@@ -478,7 +478,7 @@ struct state *stateM_previousState( struct stateMachine *stateMachine );
  * \retval false if \pn{stateMachine} is NULL or if the current state is not a
  * final state.
  */
-bool stateM_stopped( struct stateMachine *stateMachine );
+bool stateM_stopped(struct stateMachine *stateMachine);
 
 #endif // STATEMACHINE_H
 
